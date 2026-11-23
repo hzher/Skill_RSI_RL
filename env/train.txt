@@ -1,0 +1,10 @@
+torch>=2.5,<3
+transformers>=4.57,<5
+peft>=0.16,<0.20
+accelerate>=1.0,<2
+numpy>=1.24,<2
+ray==2.46.0
+tensordict==0.7.2
+codetiming>=1.4,<2
+PyYAML>=6,<7
+packaging>=21

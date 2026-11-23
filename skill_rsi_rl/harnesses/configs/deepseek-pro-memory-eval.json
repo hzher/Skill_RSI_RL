@@ -1,0 +1,12 @@
+{
+  "system": {
+    "provider": "deepseek-official",
+    "model": "deepseek-v4-pro",
+    "base_url": "https://api.deepseek.com/anthropic",
+    "reasoning_effort": "high",
+    "max_tokens": 32768,
+    "max_steps": 8,
+    "tools_mode": "memory",
+    "timeout": 300
+  }
+}

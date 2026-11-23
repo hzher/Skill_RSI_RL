@@ -1,0 +1,6 @@
+{
+  "objective": "Maximize profit against the opponent across independent poker hands.",
+  "reward": "A hand's reward is the net chip profit or loss. A completed hand reveals its chip outcome.",
+  "action_schema": "Use the provided structured poker action schema.",
+  "prior_hands": "Use observations from previous hands to infer patterns in the opponent's play."
+}

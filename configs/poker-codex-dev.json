@@ -1,0 +1,20 @@
+{
+  "split": "dev",
+  "environment_seeds": [
+    82011,
+    82012
+  ],
+  "benchmark": {
+    "harness": "codex",
+    "task": "exploitable_poker",
+    "task_params": {
+      "num_instances": 5,
+      "opponent_policy": "calling_station"
+    },
+    "system_params": {
+      "model": "gpt-5.4-mini",
+      "version": "0.125.0",
+      "single_conversation": true
+    }
+  }
+}

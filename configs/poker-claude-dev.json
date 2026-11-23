@@ -1,0 +1,21 @@
+{
+  "split": "dev",
+  "environment_seeds": [
+    82011,
+    82012
+  ],
+  "benchmark": {
+    "harness": "claude",
+    "task": "exploitable_poker",
+    "task_params": {
+      "num_instances": 5,
+      "opponent_policy": "calling_station"
+    },
+    "system_params": {
+      "model": "claude-sonnet-4-6",
+      "version": "2.1.119",
+      "single_conversation": true,
+      "memory_instruction": ""
+    }
+  }
+}

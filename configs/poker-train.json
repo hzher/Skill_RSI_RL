@@ -1,0 +1,35 @@
+{
+  "split": "train",
+  "environment_seeds": [
+    71011,
+    71012,
+    71013,
+    71014
+  ],
+  "benchmark": {
+    "harness": "dsh",
+    "task": "exploitable_poker",
+    "task_params": {
+      "num_instances": 5,
+      "opponent_policy": "calling_station"
+    },
+    "system_params": {
+      "provider": "deepseek-official",
+      "base_url": "https://api.deepseek.com/anthropic",
+      "model": "deepseek-flash",
+      "reasoning_effort": "high",
+      "max_tokens": 16384,
+      "max_steps": 8,
+      "tools_mode": "memory",
+      "timeout": 300
+    }
+  },
+  "group_size": 4,
+  "groups_per_round": 1,
+  "max_group_attempts": 4,
+  "seed": 17,
+  "lora_rank": 16,
+  "learning_rate": 8e-06,
+  "beta": 0.01,
+  "clip_ratio": 0.2
+}
