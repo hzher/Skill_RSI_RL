@@ -1,0 +1,18 @@
+{
+  "split": "dev",
+  "environment_seeds": [72011, 72012],
+  "benchmark": {
+    "harness": "codex",
+    "task": "exploitable_poker",
+    "task_params": {"num_instances": 5, "opponent_policy": "calling_station"},
+    "system_params": {
+      "backend": "skill_rsi",
+      "model": "gpt-5.4-mini",
+      "command": "codex",
+      "single_conversation": true,
+      "upstream": "https://api.openai.com/v1",
+      "credential_env": "OPENAI_API_KEY",
+      "reasoning_effort": "high"
+    }
+  }
+}

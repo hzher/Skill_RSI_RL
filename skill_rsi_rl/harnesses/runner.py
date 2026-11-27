@@ -122,6 +122,11 @@ def _check_decisions(interactions, decisions, sample):
 def run_rollout(config: dict, *, environment_seed: int, sampling_seed: int, policy_id: str | None,
                 output: Path, sample: bool) -> dict:
     """Use a separate process per replica. The native task owns process RNG and working directory."""
+    from .native_spec import KINDS, kind
+    if kind(config) in KINDS:
+        from .native_runner import run_rollout as native_rollout
+        return native_rollout(config, environment_seed=environment_seed, sampling_seed=sampling_seed,
+                              policy_id=policy_id, output=output, sample=sample)
     root, bench_commit = activate_benchmark()
     from src.interface import run_task
     from src.registry import get_system_class, get_task_class
@@ -175,17 +180,37 @@ def run_rollout(config: dict, *, environment_seed: int, sampling_seed: int, poli
                 native._memory_policy = policy
                 system = native
             else:
-                native = get_system_class(harness)(**system_params)
+                if harness == "codex" and system_params.get("backend") == "skill_rsi":
+                    from .codex_system import CodexSystem
+
+                    parameters = {k: v for k, v in system_params.items() if k != "backend"}
+                    native = CodexSystem(**parameters, runtime_root=str(output / "native"))
+                else:
+                    native = get_system_class(harness)(**system_params)
                 close_native = native._stop_container
                 system = PolicySystem(native, policy) if policy is not None else native
                 system.reset()
             recorder = TraceRecorder(harness, task_name, system_params, task_params, trace_path=trace_path,
                                      run_group_id=output.name, run_index=run_index,
                                      task_brief=task.get_agent_brief(), phase="run")
-            result = run_task(task, system, show_progress=False, trace_recorder=recorder, reset_system=False)
+            indices = config.get("instance_indices")
+            initial_query = None
+            if indices is not None:
+                if (not isinstance(indices, list) or not indices
+                        or any(type(i) is not int or i < 0 for i in indices) or len(set(indices)) != len(indices)):
+                    raise ValueError("instance_indices must contain distinct nonnegative canonical indices")
+                task.build_canonical_run_state()
+                if any(i >= len(task.instances) for i in indices):
+                    raise ValueError("instance_indices exceed the official canonical schedule")
+                task.select_run_instances(indices)
+                initial_query = task.build_current_query()
+            result = run_task(task, system, show_progress=False, trace_recorder=recorder, reset_system=False,
+                              initial_query=initial_query)
             trace = recorder.finalize(result)
             _atomic_write_json(trace_path, trace)
         outcomes = _outcomes(result, getattr(task, "num_instances", None))
+        if indices is not None and [o["instance_index"] for o in outcomes] != indices:
+            raise ValueError("official outcomes differ from the selected canonical instance order")
         interactions = trace["interactions"]
         if any(step["response"]["metadata"].get("llm_error") for step in interactions):
             raise ValueError("Native executor failed during the official sequence")

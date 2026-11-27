@@ -1,0 +1,26 @@
+{
+  "split": "train",
+  "environment_seeds": [71011, 71012, 71013, 71014],
+  "benchmark": {
+    "harness": "codex",
+    "task": "exploitable_poker",
+    "task_params": {"num_instances": 5, "opponent_policy": "calling_station"},
+    "system_params": {
+      "backend": "skill_rsi",
+      "model": "gpt-5.4-mini",
+      "command": "codex",
+      "single_conversation": true,
+      "upstream": "https://api.openai.com/v1",
+      "credential_env": "OPENAI_API_KEY",
+      "reasoning_effort": "high"
+    }
+  },
+  "group_size": 4,
+  "groups_per_round": 1,
+  "max_group_attempts": 4,
+  "seed": 17,
+  "lora_rank": 16,
+  "learning_rate": 0.000008,
+  "beta": 0.01,
+  "clip_ratio": 0.2
+}

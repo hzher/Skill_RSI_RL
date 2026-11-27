@@ -28,6 +28,10 @@ def check_group(rollouts, policy_id, expected_size, *, expected=None, sampling_s
         if row["sample"] is not True or any(row[k] != v for k, v in header.items()):
             raise ValueError("rollout does not match the frozen training group")
         decisions, outcomes = row["decisions"], row["outcomes"]
+        native_memory = None
+        if row.get("benchmark_kind") in {"past-bench", "workbuddy"}:
+            from .harnesses.native_history import validate_history
+            native_memory = validate_history(row)
         ids = [(o["instance_index"], o["instance_id"]) for o in outcomes]
         if (not ids or len(ids) != row["expected_instances"] or len(ids) != len(set(i for _, i in ids))
                 or len(ids) != len(set(n for n, _ in ids))
@@ -59,7 +63,9 @@ def check_group(rollouts, policy_id, expected_size, *, expected=None, sampling_s
             if step["policy_id"] != policy_id or step["applied"] is not True:
                 raise ValueError("stale policy or unapplied decision")
             state, options = step["state"], step["options"]
-            if previous_memory is not None and state["memory"] != previous_memory:
+            if native_memory is not None and state["memory"] != native_memory[query_id]:
+                raise ValueError("student memory differs from the native episode boundary")
+            if native_memory is None and previous_memory is not None and state["memory"] != previous_memory:
                 raise ValueError("student memory does not continue the preceding decision")
             if options != propose_options(**state) or step["messages"] != build_messages(**state, options=options):
                 raise ValueError("recorded student input differs from the pre-action state")

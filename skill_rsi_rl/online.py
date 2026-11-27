@@ -40,6 +40,9 @@ def configuration(path, device):
     if unknown:
         raise ValueError(f"unknown online config fields: {sorted(unknown)}")
     cfg = {**DEFAULTS, **raw}
+    from .skill_rsi_bridge import pin_benchmark
+
+    cfg["benchmark"] = pin_benchmark({**cfg["benchmark"], "split": cfg.get("split")})
     if device:
         cfg["device"] = device
     if cfg.get("split") != "train":
@@ -211,7 +214,8 @@ def run(config, model, initial, output, rounds, bench_python):
     base_id, parent_id = checkpoint_identities(model, initial)
     backend = backend_provenance()
     provenance = {k: v for k, v in backend.items() if k != "checkout"}
-    _, bench_commit = verify_source("clbench")
+    from .harnesses.native_spec import benchmark_commit
+    bench_commit = benchmark_commit(config["benchmark"])
     sources = {p.name: file_sha256(p) for p in (
         Path(__file__), Path(__file__).with_name("rollout_batch.py"), Path(__file__).with_name("serve.py"),
         Path(__file__).with_name("train.py"), Path(__file__).with_name("poker_split.py"))}
@@ -219,7 +223,10 @@ def run(config, model, initial, output, rounds, bench_python):
     sources.update({str(p.relative_to(PROJECT)): file_sha256(p) for p in sorted(harness_root.rglob("*"))
                     if p.is_file() and p.suffix in {".py", ".mjs", ".json"}})
     manifest = {"schema_version": 1, "config": {k: v for k, v in config.items() if k != "bench_python"},
-                "clbench_commit": bench_commit, "source_lock_sha256": file_sha256(PROJECT / "sources.lock.json"),
+                "benchmark_commit": bench_commit,
+                "benchmark_kind": config["benchmark"].get("kind", "clbench"),
+                "clbench_commit": bench_commit if config["benchmark"].get("kind", "clbench") == "clbench" else None,
+                "source_lock_sha256": file_sha256(PROJECT / "sources.lock.json"),
                 "base_policy_id": base_id, "initial_policy_id": parent_id, "backend": provenance, "sources": sources}
     identity = digest(manifest)
     parent, optimizer = initial, None
