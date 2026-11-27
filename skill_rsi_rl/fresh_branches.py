@@ -108,6 +108,9 @@ def main():
     from .sources import verify_source
 
     cfg = json.loads(args.config.read_text())
+    from .skill_rsi_bridge import pin_benchmark
+
+    cfg["benchmark"] = pin_benchmark({**cfg["benchmark"], "split": cfg.get("split")})
     if cfg.get("split") not in ("train", "dev") or not args.source_ref.strip():
         parser.error("expected a train/dev split with a source reference")
     memory = json.loads(args.memory.read_text())
@@ -117,8 +120,9 @@ def main():
     validate_development_split(cfg)
     seeds = cfg["environment_seeds"]
     bench = {**cfg["benchmark"], "split": cfg["split"], "initial_memory": memory}
+    from .harnesses.native_spec import benchmark_commit
     manifest = {"benchmark": bench, "environment_seeds": seeds, "split": cfg["split"],
-                "source_ref": args.source_ref, "protocol": PROTOCOL, "bench_commit": verify_source("clbench")[1]}
+                "source_ref": args.source_ref, "protocol": PROTOCOL, "bench_commit": benchmark_commit(bench)}
     plan_id = digest(manifest)
     root = args.output.resolve()
     with exclusive_lock(root / ".lock"):
